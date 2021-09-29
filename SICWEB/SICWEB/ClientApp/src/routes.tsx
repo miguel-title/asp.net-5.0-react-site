@@ -93,6 +93,17 @@ const routes: Routes = [
     guard: AuthGuard,
     layout: DashboardLayout,
     routes: [
+      //SEGURIDAD
+      {
+        exact: true,// MENÚS
+        path: '/interfaces/Seguridad/frmMenus',
+        component: lazy(() => import('src/views/Seguridad/MenusView'))
+      },
+      {
+        exact: true,// USUARIOS
+        path: '/interfaces/Seguridad/frmUsuarios',
+        component: lazy(() => import('src/views/Seguridad/UsuariosView'))
+      },
       //MANTENIMIENTO
       {
         exact: true,//CLIENTE / PROVEEDOR

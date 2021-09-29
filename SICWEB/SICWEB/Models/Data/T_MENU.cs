@@ -14,5 +14,6 @@ namespace SICWEB
         [Column(TypeName = "VARCHAR")]
         [StringLength(100)]
         public string Menu_c_vpag_asp { get; set; }
+        public bool Menu_c_bestado { get; set; }
     }
 }

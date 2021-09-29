@@ -7,6 +7,13 @@
         public string code { get; set; }
         public string description { get; set; }
     }
+
+    public class SearchMenuKey
+    {
+        public string menu { get; set; }
+        public string parent_menu { get; set; }
+    }
+
     public class SearchClientKey
     {
         public string company { get; set; }
