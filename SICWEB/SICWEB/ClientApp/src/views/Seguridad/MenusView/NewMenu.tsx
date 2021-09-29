@@ -6,28 +6,28 @@ import _ from 'lodash';
 import * as Yup from 'yup';
 import { Formik } from 'formik';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  IconButton,
-  Divider,
-  FormHelperText,
-  makeStyles,
-  Grid,
-  Dialog
+    Box,
+    Typography,
+    TextField,
+    Button,
+    IconButton,
+    Divider,
+    FormHelperText,
+    makeStyles,
+    Grid,
+    Dialog
 } from '@material-ui/core';
 import AddIcon2 from '@material-ui/icons/Add';
 import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
-import { saveMenu } from 'src/apis/menuApi';
+import { getParentMenus, saveMenu } from 'src/apis/menuApi';
 import { useSnackbar } from 'notistack';
 import useSettings from 'src/hooks/useSettings';
 
 
 interface NewMenuProps {
     editID: number,
-    parent_id:number,
+    parent_id: number,
     _initialValue?: any,
     menu?: any[],
     parent_menu?: any[],
@@ -44,10 +44,10 @@ interface NewMenuProps {
 }
 
 const useStyles = makeStyles((theme: Theme) => ({
-  root: {},
-  confirmButton: {
-    marginLeft: theme.spacing(2)
-  }
+    root: {},
+    confirmButton: {
+        marginLeft: theme.spacing(2)
+    }
 }));
 
 const NewMenu: FC<NewMenuProps> = ({
@@ -71,30 +71,16 @@ const NewMenu: FC<NewMenuProps> = ({
     const { enqueueSnackbar } = useSnackbar();
     const { saveSettings } = useSettings();
     const [isModalOpen3, setIsModalOpen3] = useState(false);
-    const [subFamilies, setSubFamilies] = useState<any>([]);
+    const [parentMenus, setParentMenus] = useState<any>([]);
 
-    //const [family2, setFamily2] = useState<any[]>([]);
-    //const [subFamily2, setSubFamily2] = useState<any[]>([]);
     const [modalState, setModalState] = useState(0);
-    
-    //const _getSubFamilies = (family) => {
-    //    getSubFamilies(family).then(res => {
-    //        setSubFamilies(res);
-    //    })
-    //}
-    //const _getFamilyAndSub = (pid) => {
-    //    getFamilyAndSub(pid).then(res => {
-    //        setFamily2([
-    //            res['family']
-    //        ]);
-    //        setSubFamily2([
-    //            res['subFamily']
-    //        ]);
-    //    }).catch(err => {
-    //        setFamily2([]);
-    //        setSubFamily2([]);
-    //    })
-    //}
+
+    const _getParentMenus = () => {
+        getParentMenus().then(res => {
+            setParentMenus(res);
+        })
+    }
+
     const handleModalClose3 = (): void => {
         setIsModalOpen3(false);
     };
@@ -106,17 +92,17 @@ const NewMenu: FC<NewMenuProps> = ({
     const estadoOptions = [{
         value: 1,
         label: "Activo"
-        },
-        {
+    },
+    {
         value: 0,
         label: "Inactivo"
-        }]
+    }]
 
     const getInitialValues = () => {
-        if(editID > -1) {
+        if (editID > -1) {
             return _.merge({}, {
                 id: -1,
-                parent_id:-1,
+                parent_id: -1,
                 menu: '',
                 parent_menu: '',
                 nivel: '',
@@ -124,18 +110,18 @@ const NewMenu: FC<NewMenuProps> = ({
                 opciones: '',
                 estado: 1,
                 submit: null
-              }, {
-                    id: _initialValue[editID].menu_c_iid,
-                    parent_id: _initialValue[editID].parent_menu_c_iid,
-                    menu: _initialValue[editID].menu_c_vnomb,
-                    parent_menu: _initialValue[editID].parent_menu_c_vnomb,
-                    nivel: _initialValue[editID].menu_c_ynivel,
-                    pagina: _initialValue[editID].menu_c_vpag_asp,
-                    opciones: _initialValue[editID].opciones,
-                    estado: _initialValue[editID].estado,
-                    submit: null
+            }, {
+                id: _initialValue[editID].menu_c_iid,
+                parent_id: _initialValue[editID].parent_menu_c_iid,
+                menu: _initialValue[editID].menu_c_vnomb,
+                parent_menu: _initialValue[editID].parent_menu_c_vnomb,
+                nivel: _initialValue[editID].menu_c_ynivel,
+                pagina: _initialValue[editID].menu_c_vpag_asp,
+                opciones: _initialValue[editID].opciones,
+                estado: _initialValue[editID].estado,
+                submit: null
             });
-        }else{
+        } else {
             return {
                 id: -1,
                 parent_id: -1,
@@ -146,11 +132,15 @@ const NewMenu: FC<NewMenuProps> = ({
                 opciones: '',
                 estado: 1,
                 submit: null
-              };
+            };
         }
-    
-        
+
+
     };
+
+    useEffect(() => {
+        _getParentMenus();
+    }, [])
 
     return (
         <>
@@ -158,11 +148,10 @@ const NewMenu: FC<NewMenuProps> = ({
                 initialValues={getInitialValues()}
                 validationSchema={Yup.object().shape({
                     menu: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere el menú'),
-                    parent_menu: Yup.string().max(200, 'Debe tener 200 caracteres como máximo'),
                     nivel: Yup.number().min(0),
                     pagina: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('La página es requerida'),
                     opciones: Yup.string().max(200, 'Debe tener 200 caracteres como máximo'),
-                    estado: Yup.number().min(0)
+                    estado: Yup.number().min(0),
                 })}
                 onSubmit={async (values, {
                     resetForm,
@@ -170,14 +159,15 @@ const NewMenu: FC<NewMenuProps> = ({
                     setStatus,
                     setSubmitting
                 }) => {
-                    saveSettings({saving: true});
+                    saveSettings({ saving: true });
                     window.setTimeout(() => {
-                        values["estado"] = Number(values?.estado) === 1 ? true: false;
+                        values["estado"] = Number(values?.estado) === 1 ? true : false;
+                        values["nivel"] = values?.nivel === "" ? 0 : values?.nivel;
                         saveMenu(values).then(res => {
-                            saveSettings({saving: false});
+                            saveSettings({ saving: false });
                             _getInitialData();
                             enqueueSnackbar('Tus datos se han guardado exitosamente.', {
-                            variant: 'success'
+                                variant: 'success'
                             });
                             resetForm();
                             setStatus({ success: true });
@@ -186,9 +176,9 @@ const NewMenu: FC<NewMenuProps> = ({
                         }).catch(err => {
                             _getInitialData();
                             enqueueSnackbar('No se pudo guardar.', {
-                            variant: 'error'
+                                variant: 'error'
                             });
-                            saveSettings({saving: false});
+                            saveSettings({ saving: false });
                         });
                     }, 1000);
                 }}
@@ -207,16 +197,16 @@ const NewMenu: FC<NewMenuProps> = ({
                     <form onSubmit={handleSubmit}>
                         <Box p={3}>
                             <Typography
-                            align="center"
-                            gutterBottom
-                            variant="h4"
-                            color="textPrimary"
+                                align="center"
+                                gutterBottom
+                                variant="h4"
+                                color="textPrimary"
                             >
-                            {editID > -1 ? 'Editar Menú' : 'Nuevo Menú'}
+                                {editID > -1 ? 'Editar Menú' : 'Nuevo Menú'}
                             </Typography>
                         </Box>
                         <Divider />
-                        <Box p={3}>            
+                        <Box p={3}>
                             <Grid container spacing={3}>
                                 <Grid item lg={12} sm={12} xs={12}>
                                     <TextField
@@ -224,7 +214,7 @@ const NewMenu: FC<NewMenuProps> = ({
                                         error={Boolean(touched.menu && errors.menu)}
                                         fullWidth
                                         helperText={touched.menu && errors.menu}
-                                        label={<label>Menú <span style={{color: 'red'}}>*</span></label>}
+                                        label={<label>Menú <span style={{ color: 'red' }}>*</span></label>}
                                         name="menu"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
@@ -238,21 +228,37 @@ const NewMenu: FC<NewMenuProps> = ({
                                 <Grid item lg={12} sm={12} xs={12}>
                                     <TextField
                                         size="small"
-                                        error={Boolean(touched.parent_menu && errors.parent_menu)}
                                         fullWidth
-                                        helperText={touched.parent_menu && errors.parent_menu}
                                         label={<label>Menú Padre</label>}
-                                        name="parent_menu"
+                                        name="parent_id"
+                                        SelectProps={{ native: true }}
+                                        select
                                         onBlur={handleBlur}
-                                        onChange={handleChange}
-                                        value={values.parent_menu}
+                                        onChange={(e) => {
+                                            _getParentMenus();
+                                            handleChange(e);
+                                        }}
+                                        value={values.parent_id}
                                         variant="outlined"
                                         InputLabelProps={{
                                             shrink: true
                                         }}
-                                    />
+                                    >
+                                        {
+                                            <option key="-1" value="-1"></option>
+                                        }
+                                        {parentMenus.map((parentMenu) => (
+                                            <option
+                                                selected
+                                                key={parentMenu.menu_c_iid}
+                                                value={parentMenu.menu_c_iid}
+                                            >
+                                                {parentMenu.menu_c_vnomb}
+                                            </option>
+                                        ))}
+                                    </TextField>
                                 </Grid>
-                                <Grid item lg={12} sm={12} xs={12} style={{display: 'flex'}}>
+                                <Grid item lg={12} sm={12} xs={12} style={{ display: 'flex' }}>
                                     <TextField
                                         size="small"
                                         error={Boolean(touched.nivel && errors.nivel)}
@@ -267,17 +273,17 @@ const NewMenu: FC<NewMenuProps> = ({
                                         InputLabelProps={{
                                             shrink: true
                                         }}
-                                        />
+                                    />
                                 </Grid>
                             </Grid>
                             <Grid container spacing={3}>
-                                <Grid item lg={12} sm={12} xs={12}>  
+                                <Grid item lg={12} sm={12} xs={12}>
                                     <TextField
                                         size="small"
                                         error={Boolean(touched.pagina && errors.pagina)}
                                         fullWidth
                                         helperText={touched.pagina && errors.pagina}
-                                        label={<label>Página <span style={{color: 'red'}}>*</span></label>}
+                                        label={<label>Página <span style={{ color: 'red' }}>*</span></label>}
                                         name="pagina"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
@@ -286,12 +292,12 @@ const NewMenu: FC<NewMenuProps> = ({
                                         InputLabelProps={{
                                             shrink: true
                                         }}
-                                    />                    
+                                    />
                                 </Grid>
-                                
+
                             </Grid>
                             <Grid container spacing={3}>
-                                <Grid item lg={12} sm={12} xs={12}>  
+                                <Grid item lg={12} sm={12} xs={12}>
                                     <TextField
                                         size="small"
                                         error={Boolean(touched.opciones && errors.opciones)}
@@ -305,12 +311,11 @@ const NewMenu: FC<NewMenuProps> = ({
                                         InputLabelProps={{
                                             shrink: true
                                         }}
-                                    />                    
+                                    />
                                 </Grid>
                                 <Grid item lg={12} sm={12} xs={12} >
                                     <TextField
                                         size="small"
-                                        error={Boolean(touched.estado && errors.estado)}
                                         fullWidth
                                         SelectProps={{ native: true }}
                                         select
@@ -325,7 +330,7 @@ const NewMenu: FC<NewMenuProps> = ({
                                         }}
                                     >
                                         {estadoOptions.map((option) => (
-                                            <option 
+                                            <option
                                                 key={option.value}
                                                 value={option.value}
                                             >
@@ -334,14 +339,14 @@ const NewMenu: FC<NewMenuProps> = ({
                                         ))}
                                     </TextField>
                                 </Grid>
-                            </Grid>                        
+                            </Grid>
                         </Box>
                         <Divider />
                         {errors.submit && (
                             <Box mt={3}>
-                            <FormHelperText error>
-                                {errors.submit}
-                            </FormHelperText>
+                                <FormHelperText error>
+                                    {errors.submit}
+                                </FormHelperText>
                             </Box>
                         )}
                         <Box
@@ -354,11 +359,11 @@ const NewMenu: FC<NewMenuProps> = ({
                                 {'Cancelar'}
                             </Button>
                             <Button
-                            variant="contained"
-                            type="submit"
-                            disabled={isSubmitting}
-                            color="secondary"
-                            className={classes.confirmButton}
+                                variant="contained"
+                                type="submit"
+                                disabled={isSubmitting}
+                                color="secondary"
+                                className={classes.confirmButton}
                             >
                                 {'Confirmar'}
                             </Button>
@@ -371,14 +376,14 @@ const NewMenu: FC<NewMenuProps> = ({
 };
 
 NewMenu.propTypes = {
-  // @ts-ignore
-  event: PropTypes.object,
-  onAddComplete: PropTypes.func,
-  onCancel: PropTypes.func,
-  onDeleteComplete: PropTypes.func,
-  onEditComplete: PropTypes.func,
-  // @ts-ignore
-  range: PropTypes.object
+    // @ts-ignore
+    event: PropTypes.object,
+    onAddComplete: PropTypes.func,
+    onCancel: PropTypes.func,
+    onDeleteComplete: PropTypes.func,
+    onEditComplete: PropTypes.func,
+    // @ts-ignore
+    range: PropTypes.object
 };
 
 export default NewMenu;

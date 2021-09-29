@@ -35,7 +35,7 @@ import AddIcon2 from '@material-ui/icons/Add';
 import type { Theme } from 'src/theme';
 import type { Product } from 'src/types/product';
 import NewMenu from './NewMenu';
-import {getMenu, deleteMenu} from 'src/apis/menuApi';
+import {getParentMenus, getMenu, deleteMenu} from 'src/apis/menuApi';
 import useSettings from 'src/hooks/useSettings';
 import ConfirmModal from 'src/components/ConfirmModal';
 import { useSnackbar } from 'notistack';
@@ -72,6 +72,19 @@ const sortOptions = [
     label: 'Creation date (oldest first)'
   }
 ];
+
+const estadoOptions = [{
+  value: -1,
+  label: ""
+  },{
+  value: 1,
+  label: "Activo"
+  },
+  {
+  value: 0,
+  label: "Inactivo"
+  }]
+
 
 const applyPagination = (products: any[], page: number, limit: number): any[] => {
   return products.slice(page * limit, page * limit + limit);
@@ -156,7 +169,8 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
 
   const [filters, setFilters] = useState({
     menu: '',
-    parent_menu: '',
+    parent_id: -1,
+    state: -1
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -173,8 +187,17 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
 
   
 
+const [parentMenus, setParentMenus] = useState<any>([]);
+
+const _getParentMenus = () => {
+  getParentMenus().then(res => {
+       setParentMenus(res);
+  })
+}
+
   useEffect(() => {
     _getInitialData();
+    _getParentMenus();
   }, [])
 
   const _getInitialData = () => {
@@ -208,8 +231,6 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
     setPage(newPage);
   };
 
-
-
   return (
     <Card
       className={clsx(classes.root, className)}
@@ -237,9 +258,51 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                   label="Menú padre"
                   placeholder=""
                   variant="outlined"
-                  value={filters.parent_menu}
-                  onChange={(e) => setFilters({ ...filters, parent_menu: e.target.value })}
-                />
+                  value={filters.parent_id}
+                  SelectProps={{ native: true }}
+                  select
+                  onChange={(e) => {
+                      _getParentMenus();
+                      setFilters({ ...filters, parent_id: Number(e.target.value) })
+                  }}
+                  >
+                  {
+                      <option key="-1" value="-1"></option>
+                  }                                        
+                  {parentMenus.map((parentMenu) => (
+                      <option
+                      selected
+                      key={parentMenu.menu_c_iid}
+                      value={parentMenu.menu_c_iid}
+                      >
+                      {parentMenu.menu_c_vnomb}
+                      </option>
+                  ))}
+                  </TextField>
+              </Grid>
+              <Grid item lg={12} sm={12} xs={12} >
+                  <TextField
+                      size="small"
+                      fullWidth
+                      SelectProps={{ native: true }}
+                      select
+                      label={<label>Estado</label>}
+                      onChange={(e) => setFilters({...filters, state: Number(e.target.value)})}
+                      value={filters.state}
+                      variant="outlined"
+                      InputLabelProps={{
+                          shrink: true
+                      }}
+                  >
+                      {estadoOptions.map((option) => (
+                          <option 
+                              key={option.value}
+                              value={option.value}
+                          >
+                              {option.label}
+                          </option>
+                      ))}
+                  </TextField>
               </Grid>
             </Grid>
           </Grid>
@@ -287,6 +350,14 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
             </TableHead>
             <TableBody>
               {paginatedItems.map((item, index) => {
+                var vEstado = '';
+                if (item.estado == 1){
+                  vEstado = "Activo";
+                }else if (item.estado == 0){
+                  vEstado = "Inactivo";
+                }else{
+                  vEstado = "";
+                }
                 return (
                   <TableRow
                    style={{height: 30 }}
@@ -309,7 +380,7 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                      {item.opciones}
                     </TableCell>
                     <TableCell>
-                     {item.estado}
+                     {vEstado}
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Editar" aria-label="Editar">

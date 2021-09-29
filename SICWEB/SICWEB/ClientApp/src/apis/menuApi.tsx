@@ -1,8 +1,8 @@
 import axios from 'src/utils/axios';
 
 export const getMenuList = async () => {
-    const response = await axios.get<{}>('/api/data/menu', { });
-    if(response.status === 200) return response.data;
+    const response = await axios.get<{}>('/api/data/menu', {});
+    if (response.status === 200) return response.data;
     else return [];
 }
 
@@ -19,6 +19,11 @@ export const saveMenu = async (saveMenu) => {
     else return [];
 }
 
+export const getParentMenus = async () => {
+    const response = await axios.get<{}>('/api/menu/parentMenus', {});
+    if (response.status === 200) return response.data;
+    else return [];
+}
 
 export const getMenu = async (filter) => {
     const response = await axios.post<{}>('/api/menu/menus', filter);

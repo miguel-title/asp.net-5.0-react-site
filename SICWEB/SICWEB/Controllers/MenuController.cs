@@ -43,13 +43,13 @@ namespace SICWEB.Controllers
                             select new
                             {
                                 menu_c_iid = A.Menu_c_iid,
-                                parent_menu_c_iid = A.Menu_c_iid_padre,
+                                parent_menu_c_iid = A.Menu_c_iid_padre == null ? -1 : A.Menu_c_iid_padre,
                                 menu_c_vnomb = A.Menu_c_vnomb,
                                 parent_menu_c_vnomb = m.Menu_c_vnomb,
                                 menu_c_ynivel = A.Menu_c_ynivel,
                                 menu_c_vpag_asp = A.Menu_c_vpag_asp,
                                 opciones = "",
-                                estado = ""
+                                estado = A.Menu_c_bestado == true ? 1 : 0
                             };
 
                 if (!(searchKey.menu == null) && !searchKey.menu.Equals(""))
@@ -57,10 +57,40 @@ namespace SICWEB.Controllers
                     query = query.Where(c => c.menu_c_vnomb.Contains(searchKey.menu));
 
                 }
-                if (!(searchKey.parent_menu == null) && !searchKey.parent_menu.Equals(""))
+                if (!(searchKey.parent_id == -1))
                 {
-                    query = query.Where(c => c.parent_menu_c_vnomb.Contains(searchKey.parent_menu));
+                    query = query.Where(c => c.parent_menu_c_iid.Equals(searchKey.parent_id));
                 }
+
+                if (!(searchKey.state == -1))
+                {
+                    query = query.Where(c => c.estado.Equals(searchKey.state == 1 ? true : false));
+                }
+
+                return Ok(query);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Parentmenus()
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+
+                var query = from A in _context_SS.Set<T_MENU>()
+                            where A.Menu_c_iid_padre == null
+                            select new
+                            {
+                                A.Menu_c_iid,
+                                A.Menu_c_vnomb
+                            };
+
 
                 return Ok(query);
             }
@@ -99,6 +129,10 @@ namespace SICWEB.Controllers
                     if (menu.parent_id != -1)
                     {
                         _menu.Menu_c_iid_padre = menu.parent_id;
+                    }
+                    else
+                    {
+                        _menu.Menu_c_iid_padre = null;
                     }
                     _menu.Menu_c_vnomb = menu.menu;
                     _menu.Menu_c_ynivel = menu.nivel;

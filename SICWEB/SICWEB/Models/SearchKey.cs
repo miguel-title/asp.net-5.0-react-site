@@ -11,7 +11,8 @@
     public class SearchMenuKey
     {
         public string menu { get; set; }
-        public string parent_menu { get; set; }
+        public int parent_id { get; set; }
+        public int state { get; set; }
     }
 
     public class SearchClientKey
