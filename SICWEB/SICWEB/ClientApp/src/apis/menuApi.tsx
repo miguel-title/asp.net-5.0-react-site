@@ -30,3 +30,15 @@ export const getMenu = async (filter) => {
     if (response.status === 200) return response.data;
     else return [];
 }
+
+export const saveOPC = async(saveOPC) => {
+    const response = await axios.post<{}>('/api/menu/saveOPC', saveOPC);
+    if (response.status === 200) return response.data;
+    else return [];
+}
+
+export const getOPCs = async (id) => {
+    const response = await axios.post<{}>('/api/menu/opcs', {id: id});
+    if (response.status === 200) return response.data;
+    else return [];
+}

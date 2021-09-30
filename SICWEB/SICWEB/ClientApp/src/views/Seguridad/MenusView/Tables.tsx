@@ -35,6 +35,7 @@ import AddIcon2 from '@material-ui/icons/Add';
 import type { Theme } from 'src/theme';
 import type { Product } from 'src/types/product';
 import NewMenu from './NewMenu';
+import OPCView from './OPCView';
 import {getParentMenus, getMenu, deleteMenu} from 'src/apis/menuApi';
 import useSettings from 'src/hooks/useSettings';
 import ConfirmModal from 'src/components/ConfirmModal';
@@ -179,6 +180,8 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
   const [editID, setEditID] = useState(-1);
   
   const [isModalOpen2, setIsModalOpen2] = useState(false);
+
+  const [isModalOpen3, setIsModalOpen3] = useState(false);
   
   const [page, setPage] = useState<number>(0);
   const [limit] = useState<number>(15);
@@ -206,6 +209,7 @@ const _getParentMenus = () => {
 
   const handleModalClose = (): void => {
     setIsModalOpen(false);
+    setIsModalOpen3(false);
   };
 
   const handleSearch =() => {
@@ -225,6 +229,11 @@ const _getParentMenus = () => {
     setEditID(id);
     setIsModalOpen(true);
     
+  }
+
+  const handleView = (id) => {
+    setEditID(id);
+    setIsModalOpen3(true);
   }
 
   const handlePageChange = (event: any, newPage: number): void => {
@@ -377,7 +386,15 @@ const _getParentMenus = () => {
                     {item.menu_c_vpag_asp}
                     </TableCell>
                     <TableCell>
-                     {item.opciones}
+                     {item.opciones == 1 &&
+                      <Tooltip title="Ver" aria-label="Ver">
+                      <IconButton onClick={() => handleView(item.menu_c_iid)}>
+                        <SvgIcon fontSize="small">
+                          <SearchIcon />
+                        </SvgIcon>
+                      </IconButton>
+                      </Tooltip>
+                     }
                     </TableCell>
                     <TableCell>
                      {vEstado}
@@ -433,6 +450,23 @@ const _getParentMenus = () => {
             _getInitialData={_getInitialData}
             editID = {editID}
             _initialValue = {items}
+            onAddComplete={handleModalClose}
+            onCancel={handleModalClose}
+            onDeleteComplete={handleModalClose}
+            onEditComplete={handleModalClose}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        maxWidth="md"
+        fullWidth
+        onClose={handleModalClose}
+        open={isModalOpen3}
+      >
+        {/* Dialog renders its body even if not open */}
+        {isModalOpen3 && (
+            <OPCView
+            editID = {editID}
             onAddComplete={handleModalClose}
             onCancel={handleModalClose}
             onDeleteComplete={handleModalClose}

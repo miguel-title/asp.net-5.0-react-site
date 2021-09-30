@@ -14,6 +14,9 @@ namespace SICWEB.DbFactory
 
         public DbSet<T_USUARIO> USUARIO { get; set; }
         public DbSet<T_MENU> Menu { get; set; }
+        public DbSet<T_MENU_OPCION> MenuOpc { get; set; }
+
+        public DbSet<T_OPCION> Opc { get; set; }
         
         public MainMssqlDbContext(DbContextOptions<MainMssqlDbContext> options) : base(options)
         {
@@ -27,6 +30,10 @@ namespace SICWEB.DbFactory
             builder.Entity<T_MENU>().ToTable(Prefix + "T_MENU", Schema);
             builder.Entity<T_MENU>().HasKey(p => p.Menu_c_iid);
             builder.Entity<T_MENU>().Property(p => p.Menu_c_iid).ValueGeneratedOnAdd();
+
+            builder.Entity<T_MENU_OPCION>().ToTable(Prefix + "T_MENU_OPCION", Schema);
+            builder.Entity<T_MENU_OPCION>().HasKey(p => p.Menu_opcion_c_iid);
+            builder.Entity<T_MENU_OPCION>().Property(p => p.Menu_opcion_c_iid).ValueGeneratedOnAdd();
 
             builder.Entity<T_OPCION>().ToTable(Prefix + "T_OPCION", Schema);
             builder.Entity<T_OPCION>().HasKey(p => p.Opc_c_iid);

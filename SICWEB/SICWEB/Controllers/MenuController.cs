@@ -39,17 +39,26 @@ namespace SICWEB.Controllers
 
                 var query = from A in _context_SS.Set<T_MENU>()
                             join E in _context_SS.Set<T_MENU>() on A.Menu_c_iid_padre equals E.Menu_c_iid into Detail
-                            from m in Detail.DefaultIfEmpty()
+                            from M in Detail.DefaultIfEmpty()
+                            join O in (
+                                from G in _context_SS.Set<T_MENU_OPCION>() 
+                                group G by G.Menu_c_iid into grouping 
+                                select new {
+                                    menu_c_iid = grouping.Key,
+                                    count = grouping.Count()
+                                }
+                            ) on A.Menu_c_iid equals O.menu_c_iid into Opc
+                            from F in Opc.DefaultIfEmpty()
                             select new
                             {
                                 menu_c_iid = A.Menu_c_iid,
                                 parent_menu_c_iid = A.Menu_c_iid_padre == null ? -1 : A.Menu_c_iid_padre,
                                 menu_c_vnomb = A.Menu_c_vnomb,
-                                parent_menu_c_vnomb = m.Menu_c_vnomb,
+                                parent_menu_c_vnomb = M.Menu_c_vnomb,
                                 menu_c_ynivel = A.Menu_c_ynivel,
                                 menu_c_vpag_asp = A.Menu_c_vpag_asp,
-                                opciones = "",
-                                estado = A.Menu_c_bestado == true ? 1 : 0
+                                opciones = F.count == null ? 0 : 1,
+                                estado = A.Menu_c_bestado// == true ? 1 : 0
                             };
 
                 if (!(searchKey.menu == null) && !searchKey.menu.Equals(""))
@@ -152,6 +161,38 @@ namespace SICWEB.Controllers
         [HttpPost]
         [Authorize(Roles = "cliente")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Saveopc([FromBody] NewOPC OPC)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                int intIdt = _context_SS.Opc.Max(u => u.Opc_c_iid);
+
+                T_OPCION _opc = new();
+                _opc.Opc_c_iid = intIdt + 1;
+                _opc.Opc_c_vdesc= OPC.vdesc;
+                _opc.Opc_c_bestado = OPC.estado;
+                _context_SS.Opc.Add(_opc);
+                _context_SS.SaveChanges();
+
+                T_MENU_OPCION _menu_opc = new();
+                _menu_opc.Menu_c_iid = OPC.menuID;
+                _menu_opc.Opc_c_iid = intIdt + 1;
+                _menu_opc.Menu_opcion_c_bestado = OPC.estado;
+                _context_SS.MenuOpc.Add(_menu_opc);
+                _context_SS.SaveChanges();
+
+                return Ok();
+            }
+            else
+            {
+                return Ok();
+            }
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult Deletemenu([FromBody] IdKey item)
         {
             if (_engine.Equals("MSSQL"))
@@ -167,6 +208,35 @@ namespace SICWEB.Controllers
                 {
                     return NotFound();
                 }
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Opcs([FromBody] IdKey item)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                var query = from A in _context_SS.Set<T_MENU_OPCION>()
+                            join E in _context_SS.Set<T_OPCION>() on A.Opc_c_iid equals E.Opc_c_iid into Detail
+                            from M in Detail.DefaultIfEmpty()
+                            select new
+                            {
+                                A.Menu_c_iid,
+                                M.Opc_c_iid,
+                                M.Opc_c_vdesc,
+                                M.Opc_c_bestado
+                            };
+
+                query = query.Where(c => c.Menu_c_iid.Equals(item.id));
+
+                return Ok(query);
             }
             else
             {

@@ -18,9 +18,10 @@ import {
     Dialog
 } from '@material-ui/core';
 import AddIcon2 from '@material-ui/icons/Add';
+import NewOPC from './NewOPC';
 import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
-import { getParentMenus, saveMenu } from 'src/apis/menuApi';
+import { getParentMenus, saveMenu, getOPCs } from 'src/apis/menuApi';
 import { useSnackbar } from 'notistack';
 import useSettings from 'src/hooks/useSettings';
 
@@ -33,7 +34,7 @@ interface NewMenuProps {
     parent_menu?: any[],
     nivel?: any[],
     pagina?: any[],
-    opciones?: any[],
+    opciones?: number,
     estado?: number,
     event?: Event;
     _getInitialData?: () => void;
@@ -49,6 +50,7 @@ const useStyles = makeStyles((theme: Theme) => ({
         marginLeft: theme.spacing(2)
     }
 }));
+
 
 const NewMenu: FC<NewMenuProps> = ({
     editID,
@@ -73,6 +75,11 @@ const NewMenu: FC<NewMenuProps> = ({
     const [isModalOpen3, setIsModalOpen3] = useState(false);
     const [parentMenus, setParentMenus] = useState<any>([]);
 
+    const [vdesc, setVdesc] = useState<any>([]);
+    const [bestado, setBestado] = useState<any>([]);
+    
+    const [opcs, setOPCs] = useState<any>([]);
+
     const [modalState, setModalState] = useState(0);
 
     const _getParentMenus = () => {
@@ -83,10 +90,17 @@ const NewMenu: FC<NewMenuProps> = ({
 
     const handleModalClose3 = (): void => {
         setIsModalOpen3(false);
+        if (editID > -1){
+            _getOPCs(_initialValue[editID].menu_c_iid);
+        }
     };
 
     const handleModalOpen3 = (): void => {
         setIsModalOpen3(true);
+    };
+
+    const handleModalClose = (): void => {
+        setIsModalOpen3(false);
     };
 
     const estadoOptions = [{
@@ -138,8 +152,17 @@ const NewMenu: FC<NewMenuProps> = ({
 
     };
 
+    const _getOPCs = (id) => {
+        getOPCs(id).then(res => {
+            setOPCs(res);
+        })
+    }
+
     useEffect(() => {
         _getParentMenus();
+        if (editID > -1){
+            _getOPCs(_initialValue[editID].menu_c_iid);
+        }
     }, [])
 
     return (
@@ -150,8 +173,6 @@ const NewMenu: FC<NewMenuProps> = ({
                     menu: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('Se requiere el menú'),
                     nivel: Yup.number().min(0),
                     pagina: Yup.string().max(200, 'Debe tener 200 caracteres como máximo').required('La página es requerida'),
-                    opciones: Yup.string().max(200, 'Debe tener 200 caracteres como máximo'),
-                    estado: Yup.number().min(0),
                 })}
                 onSubmit={async (values, {
                     resetForm,
@@ -297,13 +318,15 @@ const NewMenu: FC<NewMenuProps> = ({
 
                             </Grid>
                             <Grid container spacing={3}>
-                                <Grid item lg={12} sm={12} xs={12}>
+                                <Grid item lg={12} sm={12} xs={12} style={{display: 'flex'}}>
                                     <TextField
                                         size="small"
                                         error={Boolean(touched.opciones && errors.opciones)}
                                         fullWidth
                                         label={<label>Opciones</label>}
                                         name="opciones"
+                                        SelectProps={{ native: true }}
+                                        select
                                         onBlur={handleBlur}
                                         onChange={handleChange}
                                         value={values.opciones}
@@ -311,7 +334,25 @@ const NewMenu: FC<NewMenuProps> = ({
                                         InputLabelProps={{
                                             shrink: true
                                         }}
-                                    />
+                                    >
+                                        {opcs.map((opc) => (
+                                            <option
+                                            key={opc.opc_c_iid}
+                                            value={opc.opc_c_iid}
+                                            >
+                                            {opc.opc_c_vdesc}
+                                            </option>
+                                        ))}
+                                    </TextField>
+                                    <IconButton 
+                                        size="small" 
+                                        color="secondary" 
+                                        aria-label="add to shopping cart"
+                                        onClick={() => { setModalState(0);handleModalOpen3()}}
+                                        disabled={editID > -1 ? false : true}
+                                    >
+                                        <AddIcon2 />
+                                    </IconButton>
                                 </Grid>
                                 <Grid item lg={12} sm={12} xs={12} >
                                     <TextField
@@ -371,6 +412,25 @@ const NewMenu: FC<NewMenuProps> = ({
                     </form>
                 )}
             </Formik>
+            <Dialog
+                maxWidth="md"
+                fullWidth
+                onClose={handleModalClose3}
+                open={isModalOpen3}
+            >
+                {/* Dialog renders its body even if not open */}
+                {isModalOpen3 && (
+                    <NewOPC
+                    menuID={_initialValue[editID].menu_c_iid}
+                    vdesc={vdesc}
+                    bestado={bestado}
+                    onAddComplete={handleModalClose3}
+                    onCancel={handleModalClose3}
+                    onDeleteComplete={handleModalClose3}
+                    onEditComplete={handleModalClose3}
+                />
+                )}
+            </Dialog>
         </>
     );
 };
