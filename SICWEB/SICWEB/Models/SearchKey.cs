@@ -14,6 +14,14 @@
         public int parent_id { get; set; }
         public int state { get; set; }
     }
+    public class SearchUserKey
+    {
+        public string user { get; set; }
+        public string networkuser{ get; set; }
+        public string name { get; set; }
+        public string surname { get; set; }
+        public int state { get; set; }
+    }
 
     public class SearchClientKey
     {

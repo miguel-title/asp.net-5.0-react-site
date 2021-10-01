@@ -19,7 +19,7 @@ const DashboardView: FC = () => {
   
   const classes = useStyles();
 
-  const products = [];
+  const users = [];
   return (
     <Page
       className={classes.root}
@@ -27,7 +27,7 @@ const DashboardView: FC = () => {
     >
       <Container maxWidth={false}>
         <Header />
-        <Tables products={products}/>
+        <Tables products={users}/>
       </Container>
     </Page>
   );

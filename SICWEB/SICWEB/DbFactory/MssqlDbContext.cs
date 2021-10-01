@@ -17,7 +17,10 @@ namespace SICWEB.DbFactory
         public DbSet<T_MENU_OPCION> MenuOpc { get; set; }
 
         public DbSet<T_OPCION> Opc { get; set; }
-        
+
+        public DbSet<T_USUARIO> User { get; set; }
+        public DbSet<T_USUARIO_PERFIL> UserProfile { get; set; }
+
         public MainMssqlDbContext(DbContextOptions<MainMssqlDbContext> options) : base(options)
         {
 

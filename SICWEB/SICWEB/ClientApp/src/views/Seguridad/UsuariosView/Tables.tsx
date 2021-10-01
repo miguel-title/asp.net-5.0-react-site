@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type {
-  FC} from 'react';
+  FC
+} from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import PerfectScrollbar from 'react-perfect-scrollbar';
@@ -34,11 +35,12 @@ import AddIcon2 from '@material-ui/icons/Add';
 
 import type { Theme } from 'src/theme';
 import type { Product } from 'src/types/product';
-import NewItem from './NewItem';
-import {getSegments, getFamilies, getUnits, getProducts, getSubFamilies, getItem, deleteItem} from 'src/apis/itemApi';
+import NewUser from './NewUser';
+import { getUser, deleteUser } from 'src/apis/userApi';
 import useSettings from 'src/hooks/useSettings';
 import ConfirmModal from 'src/components/ConfirmModal';
 import { useSnackbar } from 'notistack';
+import { ContactsOutlined, Pages } from '@material-ui/icons';
 
 
 interface TablesProps {
@@ -51,6 +53,10 @@ interface Filters {
   category?: string;
   inStock?: boolean;
   isShippable?: boolean;
+}
+
+interface responseItem {
+  user: string;
 }
 
 const sortOptions = [
@@ -71,6 +77,19 @@ const sortOptions = [
     label: 'Creation date (oldest first)'
   }
 ];
+
+const estadoOptions = [{
+  value: -1,
+  label: ""
+}, {
+  value: 1,
+  label: "Activo"
+},
+{
+  value: 0,
+  label: "Inactivo"
+}]
+
 
 const applyPagination = (products: any[], page: number, limit: number): any[] => {
   return products.slice(page * limit, page * limit + limit);
@@ -142,108 +161,78 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
     responsiveFontSizes: settings.responsiveFontSizes,
     theme: settings.theme
   });
-  
-  const [segments, setSegments] = useState<any>([]);
-  const [products, setProducts] = useState<any>([]);
-  const [families, setFamilies] = useState<any>([]);
-  const [subFamilies, setSubFamilies] = useState<any>([]);
-  const [units, setUnits] = useState<any>([]);
+
+  const [name, setName] = useState<any>([]);
+  const [lastname, setLastname] = useState<any>([]);
+  const [mlastname, setMlastname] = useState<any>([]);
+  const [user, setUser] = useState<any>([]);
+  const [password, setPassword] = useState<any>([]);
+  const [networkuser, setNetworkuser] = useState<any>([]);
+  const [profile_id, setProfile_id] = useState<any>([]);
+  const [estado, setEstado] = useState<any>([]);
 
   const [items, setItems] = useState<any>([]);
 
   const [filters, setFilters] = useState({
-    code: '',
-    description: '',
-    family: '-1',
-    subFamily: '-1',
+    user: '',
+    name: '',
+    surname: '',
+    state: -1,
+    networkuser: ''
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [deleteID, setDeleteID] = useState('-1');
   const [editID, setEditID] = useState(-1);
-  
+
   const [isModalOpen2, setIsModalOpen2] = useState(false);
-  
+
   const [page, setPage] = useState<number>(0);
   const [limit] = useState<number>(15);
 
   const paginatedItems = applyPagination(items, page, limit);
-
-  
 
   useEffect(() => {
     _getInitialData();
   }, [])
 
   const _getInitialData = () => {
-    _getSegments();
-    _getProducts();
-    _getFamilies(); 
-    _getUnits();
     handleSearch();
-  }
-
-  const _getSegments = () => {
-    getSegments().then(res => {
-      setSegments(res);
-    });
-  }
-
-  const _getProducts = () => {
-    getProducts().then(res => {
-      setProducts(res);
-    });
-  }
-
-  const _getFamilies = () => {
-    getFamilies().then(res => {
-      setFamilies(res);
-    });
-  }
-
-  const _getSubFamilies = (fid) => {
-    getSubFamilies(fid).then(res => {
-      setSubFamilies(res);
-    }).catch(err => {
-      setSubFamilies([]);
-    });
-  }
-
-  const _getUnits = () => {
-    getUnits().then(res => {
-      setUnits(res);
-    });
   }
 
   const handleModalClose = (): void => {
     setIsModalOpen(false);
   };
 
-  const handleSearch =() => {
-    getItem(filters).then(res => {
-      setItems(res);
+  const handleSearch = () => {
+    getUser(filters).then((res: []) => {
+      let newArr = [];
+      (Array.isArray(res) ? res : []).map((element: responseItem) => {
+        const existCheck = newArr.filter(item => item?.user === element.user)?.[0] ? true : false;
+        if (!existCheck) newArr.push(element)
+      });
+      setItems(newArr);
+
     }).catch(err => {
       setItems([]);
     })
   }
 
-  const handleDelete =(id) => {
+  const handleDelete = (id) => {
     setDeleteID(id);
     setIsModalOpen2(true);
   }
 
-  const handleEdit =(id) => {
+  const handleEdit = (id) => {
     setEditID(id);
     setIsModalOpen(true);
-    
+
   }
 
   const handlePageChange = (event: any, newPage: number): void => {
     setPage(newPage);
   };
-
-
 
   return (
     <Card
@@ -258,72 +247,66 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                 <TextField
                   fullWidth
                   size="small"
-                  label="Código"
+                  label="Usuario"
                   placeholder=""
                   variant="outlined"
-                  value={filters.code}
-                  onChange={(e) => setFilters({...filters, code: e.target.value})}
+                  value={filters.user}
+                  onChange={(e) => setFilters({ ...filters, user: e.target.value })}
                 />
               </Grid>
               <Grid item lg={6} sm={6} xs={12}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Descripción"
+                  label="Usuario de red"
                   placeholder=""
                   variant="outlined"
-                  value={filters.description}
-                  onChange={(e) => setFilters({...filters, description: e.target.value})}
+                  value={filters.networkuser}
+                  onChange={(e) => setFilters({ ...filters, networkuser: e.target.value })}
                 />
               </Grid>
               <Grid item lg={6} sm={6} xs={12}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Familia"
-                  select
+                  label="Nombres"
+                  placeholder=""
+                  variant="outlined"
+                  value={filters.name}
+                  onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+                />
+              </Grid>
+              <Grid item lg={6} sm={6} xs={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Apellidos"
+                  placeholder=""
+                  variant="outlined"
+                  value={filters.surname}
+                  onChange={(e) => setFilters({ ...filters, surname: e.target.value })}
+                />
+              </Grid>
+              <Grid item lg={12} sm={12} xs={12} >
+                <TextField
+                  size="small"
+                  fullWidth
                   SelectProps={{ native: true }}
+                  select
+                  label={<label>Estado</label>}
+                  onChange={(e) => setFilters({ ...filters, state: Number(e.target.value) })}
+                  value={filters.state}
                   variant="outlined"
-                  value={filters.family || -1}
-                  onChange={(e) => {
-                    setFilters({...filters, 
-                      family: e.target.value,
-                      subFamily: '-1'
-                    })
-                    _getSubFamilies(e.target.value);
+                  InputLabelProps={{
+                    shrink: true
                   }}
                 >
-                  <option key="-1" value="-1">{'-- Seleccionar --'}</option>
-                  {families.map((family) => (
+                  {estadoOptions.map((option) => (
                     <option
-                      key={family.ifm_c_iid}
-                      value={family.ifm_c_iid}
+                      key={option.value}
+                      value={option.value}
                     >
-                      {family.ifm_c_des}
-                    </option>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item lg={6} sm={6} xs={12}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="SubFamilia"
-                  name="availability"
-                  select
-                  SelectProps={{ native: true }}
-                  variant="outlined"
-                  value={filters.subFamily || -1}
-                  onChange={(e) => setFilters({...filters, subFamily: e.target.value})}
-                >
-                  <option key="-1" value="-1">{'-- Seleccionar --'}</option>
-                    
-                  {subFamilies.map((subFamily) => (
-                    <option
-                      key={subFamily.isf_c_iid}
-                      value={subFamily.isf_c_iid}
-                    >
-                      {subFamily.isf_c_vdesc}
+                      {option.label}
                     </option>
                   ))}
                 </TextField>
@@ -340,35 +323,41 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
                 <Button variant="contained" color="secondary" startIcon={<AddIcon2 />} onClick={() => handleEdit('-1')}>{'Nuevo'}</Button>
               </Grid>
             </Grid>
-          </Grid>      
+          </Grid>
         </Grid>
-      </Box>  
+      </Box>
       <PerfectScrollbar>
         <Box minWidth={1200}>
           <Table
             stickyHeader >
-            <TableHead style={{background: 'red'}}>
+            <TableHead style={{ background: 'red' }}>
               <TableRow>
                 <TableCell>
-                CÓDIGO
+                  Usuario
                 </TableCell>
                 <TableCell>
-                DESCRIPCIÓN
+                  Usuario de red
                 </TableCell>
                 <TableCell>
-                PRECIO COMPRA
+                  Nombres
                 </TableCell>
                 <TableCell>
-                PRECIO VENTA
+                  Apellido Paterno
                 </TableCell>
                 <TableCell>
-                UNIDAD DE MEDIDA	
+                  Apellido Materno
                 </TableCell>
                 <TableCell>
-                FAMILIA	
+                  Perfiles
                 </TableCell>
                 <TableCell>
-                SUBFAMILIA	
+                  Roles
+                </TableCell>
+                <TableCell>
+                  Rol Principal
+                </TableCell>
+                <TableCell>
+                  Estado
                 </TableCell>
                 <TableCell align="right">
                   &nbsp;
@@ -377,43 +366,57 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
             </TableHead>
             <TableBody>
               {paginatedItems.map((item, index) => {
+                var vEstado = '';
+                if (item.estado == 1) {
+                  vEstado = "Activo";
+                } else if (item.estado == 0) {
+                  vEstado = "Inactivo";
+                } else {
+                  vEstado = "";
+                }
                 return (
                   <TableRow
-                   style={{height: 30 }}
+                    style={{ height: 30 }}
                     hover
-                    key={item.itm_c_iid}
+                    key={index}
                   >
                     <TableCell>
-                     {item.itm_c_ccodigo}
+                      {item.user}
                     </TableCell>
                     <TableCell>
-                     {item.itm_c_vdescripcion}
+                      {item.networkuser}
                     </TableCell>
                     <TableCell>
-                     {item.itm_c_dprecio_compra}
+                      {item.name}
                     </TableCell>
                     <TableCell>
-                     {item.itm_c_dprecio_venta}
+                      {item.lastname}
                     </TableCell>
                     <TableCell>
-                     {item.und_c_yid}
+                      {item.mlastname}
                     </TableCell>
                     <TableCell>
-                     {item.ifm_c_des}
+                      {item.profile}
                     </TableCell>
                     <TableCell>
-                     {item.isf_c_vdesc}
+                      {item.role}
+                    </TableCell>
+                    <TableCell>
+                      {item.roleprinciple}
+                    </TableCell>
+                    <TableCell>
+                      {vEstado}
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Editar" aria-label="Editar">
-                        <IconButton onClick={() =>handleEdit(index)}>
+                        <IconButton onClick={() => handleEdit(page * limit + index)}>
                           <SvgIcon fontSize="small">
                             <EditIcon />
                           </SvgIcon>
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Eliminar" aria-label="Eliminar">
-                        <IconButton onClick={() =>handleDelete(item.itm_c_iid)}>
+                        <IconButton onClick={() => handleDelete(item.user)}>
                           <SvgIcon fontSize="small">
                             <DeleteIcon />
                           </SvgIcon>
@@ -428,8 +431,8 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
           <TablePagination
             component="div"
             count={items.length}
-                      onPageChange={handlePageChange}
-                      onRowsPerPageChange={() => { }}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={() => { }}
             page={page}
             rowsPerPage={limit}
             rowsPerPageOptions={[15]}
@@ -444,15 +447,18 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
       >
         {/* Dialog renders its body even if not open */}
         {isModalOpen && (
-          <NewItem
-            segments={segments}
-            products={products}
-            families={families}
-            subFamilies={subFamilies}
-            units={units}
+          <NewUser
+            name={name}
+            lastname={lastname}
+            mlastname={mlastname}
+            user={user}
+            password={password}
+            networkuser={networkuser}
+            profile_id={profile_id}
+            estado={estado}
             _getInitialData={_getInitialData}
-            editID = {editID}
-            _initialValue = {items}
+            editID={editID}
+            _initialValue={items}
             onAddComplete={handleModalClose}
             onCancel={handleModalClose}
             onDeleteComplete={handleModalClose}
@@ -460,32 +466,32 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
           />
         )}
       </Dialog>
-      <ConfirmModal 
+      <ConfirmModal
         open={isModalOpen2}
         title={'¿Eliminar este artículo?'}
         setOpen={() => setIsModalOpen2(false)}
-        onConfirm={() => {  
-          saveSettings({saving: true});  
+        onConfirm={() => {
+          saveSettings({ saving: true });
           window.setTimeout(() => {
-            deleteItem(deleteID).then(res => {
-                  saveSettings({saving: false});
-                  _getInitialData();
-                  enqueueSnackbar('Tus datos se han guardado exitosamente.', {
-                  variant: 'success'
-                  });
-                  
-                  setIsModalOpen2(false);
-                  handleSearch();
-              }).catch(err => {
-                  
-                setIsModalOpen2(false);
-                handleSearch();
-                  enqueueSnackbar('No se pudo guardar.', {
-                  variant: 'error'
-                  });
-                  saveSettings({saving: false});
+            deleteUser(deleteID).then(res => {
+              saveSettings({ saving: false });
+              _getInitialData();
+              enqueueSnackbar('Tus datos se han guardado exitosamente.', {
+                variant: 'success'
               });
-          }, 1000);   
+
+              setIsModalOpen2(false);
+              handleSearch();
+            }).catch(err => {
+
+              setIsModalOpen2(false);
+              handleSearch();
+              enqueueSnackbar('No se pudo guardar.', {
+                variant: 'error'
+              });
+              saveSettings({ saving: false });
+            });
+          }, 1000);
         }}
       />
     </Card>
