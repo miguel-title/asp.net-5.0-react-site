@@ -115,7 +115,31 @@ namespace SICWEB.Controllers
             }
         }
 
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Getprofile([FromBody] IdKey item)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
 
+                var query = from A in _context_SS.Set<T_PERFIL>()
+                            where A.Perf_c_yid == item.id
+                            select new
+                            {
+                                id = A.Perf_c_yid,
+                                profile = A.Perf_c_vnomb,
+                                description = A.Perf_c_vdesc,
+                                estado = A.Perf_c_cestado
+                            };
+
+                return Ok(query);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
 
         [HttpPost]
         [Authorize(Roles = "cliente")]
@@ -172,6 +196,50 @@ namespace SICWEB.Controllers
 
                     return Ok();
                 }
+            }
+            else
+            {
+                return Ok();
+            }
+        }
+
+
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Saveprofile([FromBody] NewProfile profile)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                if (profile.method == 0)
+                {
+                    //profile Insert
+                    T_PERFIL _profile = new();
+                    _profile.Perf_c_vnomb = profile.profile;
+                    _profile.Perf_c_vdesc = profile.description;
+                    if (profile.estado == 1)
+                        _profile.Perf_c_cestado = '1';
+                    else
+                        _profile.Perf_c_cestado = '0';
+                    _context_SS.Profile.Add(_profile);
+                    _context_SS.SaveChanges();
+                }
+                else
+                {
+                    //profile update 
+                    var _profile = _context_SS.Profile.Where(u => u.Perf_c_yid.Equals((byte)profile.id)).FirstOrDefault();
+                    _profile.Perf_c_vnomb = profile.profile;
+                    _profile.Perf_c_vdesc = profile.description;
+                    if (profile.estado == 1)
+                        _profile.Perf_c_cestado = '1';
+                    else
+                        _profile.Perf_c_cestado = '0';
+                    _context_SS.Profile.Update(_profile);
+                    _context_SS.SaveChanges();
+                }
+
+                return Ok();
             }
             else
             {

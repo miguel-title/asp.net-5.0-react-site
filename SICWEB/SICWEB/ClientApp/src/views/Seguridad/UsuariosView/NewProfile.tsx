@@ -20,16 +20,18 @@ import {
 import AddIcon2 from '@material-ui/icons/Add';
 import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
-import { saveOPC } from 'src/apis/menuApi';
+import { saveProfile } from 'src/apis/userApi';
 import { useSnackbar } from 'notistack';
 import useSettings from 'src/hooks/useSettings';
+import { isConstructorDeclaration } from 'typescript';
+import { ExpandLessSharp } from '@material-ui/icons';
+import CheckboxTree from 'react-checkbox-tree';
+import 'react-checkbox-tree/lib/react-checkbox-tree.css';
 
 
 interface NewProfileProps {
-    menuID: number,
-    vdesc?:any[],
-    bestado?:any[],
-    estado?:any[],
+    profileid?:Number,
+    profiledata?:any[],
     event?: Event;
     _getInitialData?: () => void;
     onAddComplete?: () => void;
@@ -46,10 +48,8 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 const NewProfile: FC<NewProfileProps> = ({
-    menuID,
-    vdesc,
-    bestado,
-    estado,
+    profileid,
+    profiledata,
     event,
     _getInitialData,
     onAddComplete,
@@ -57,15 +57,26 @@ const NewProfile: FC<NewProfileProps> = ({
     onDeleteComplete,
     onEditComplete
 }) => {
+    const initialnodes = [{
+        value: 'mars',
+        label: 'Mars',
+        children: [
+            { value: 'phobos', label: 'Phobos' },
+            { value: 'deimos', label: 'Deimos' },
+        ],
+    }];
+
     const classes = useStyles();
     const { enqueueSnackbar } = useSnackbar();
     const { saveSettings } = useSettings();
-    const [isModalOpen3, setIsModalOpen3] = useState(false);
-    const [parentMenus, setParentMenus] = useState<any>([]);
-    
-    const [opcs, setOPCs] = useState<any>([]);
+    const [isModalOpen3, setIsModalOpen3] = useState(false);   
+    const [gridvisible, setGridvisible] = useState<string>('none');
+    const [checked, setChecked] = useState<any[]>([]);
+    const [expanded, setExpanded] = useState<any[]>([]);
+    const [nodes, setNodes] = useState<any[]>(initialnodes);
 
-    const [modalState, setModalState] = useState(0);
+    
+    const [profile, setProfile] = useState<any>([]);
 
     const handleModalClose3 = (): void => {
         setIsModalOpen3(false);
@@ -77,13 +88,32 @@ const NewProfile: FC<NewProfileProps> = ({
 
     
     const getInitialValues = () => {
-        return {
-            vdesc: '',
-            bestado: 1,
-            submit: null
-        };
-
-
+        if (profileid > -1){
+            return _.merge({}, {
+                id:0,
+                profile: "",
+                description:"",
+                estado: 1,
+                method: 1,
+                submit: null
+            }, {
+                id:profileid,
+                profile: profiledata[0]?.profile,
+                description:profiledata[0]?.description,
+                estado: profiledata[0]?.estado,
+                method: 1,
+                submit: null
+            });
+        }else{
+            return {
+                id:0,
+                profile: "",
+                description:"",
+                estado: 1,
+                method:0,
+                submit: null
+            };
+        }
     };
 
     const estadoOptions = [{
@@ -94,6 +124,15 @@ const NewProfile: FC<NewProfileProps> = ({
         value: 0,
         label: "Inactivo"
     }]
+
+    useEffect(() => {
+        if(profileid > -1){
+            setGridvisible('block');
+        }else{
+            setGridvisible('none');
+        }
+    }, [profileid])
+
 
     return (
         <>
@@ -107,9 +146,7 @@ const NewProfile: FC<NewProfileProps> = ({
                 }) => {
                     saveSettings({ saving: true });
                     window.setTimeout(() => {
-                        values["menuId"] = menuID;
-                        values["estado"] = Number(values?.bestado) === 1 ? true : false;
-                        saveOPC(values).then(res => {
+                        saveProfile(values).then(res => {
                             saveSettings({ saving: false });
                             enqueueSnackbar('Tus datos se han guardado exitosamente.', {
                                 variant: 'success'
@@ -143,7 +180,7 @@ const NewProfile: FC<NewProfileProps> = ({
                                 variant="h4"
                                 color="textPrimary"
                             >
-                                Nuevo Opciones
+                                {profileid > -1 ? 'ACCESOS POR PERFIL' : 'Nuevo PERFIL'}
                             </Typography>
                         </Box>
                         <Divider />
@@ -153,17 +190,43 @@ const NewProfile: FC<NewProfileProps> = ({
                                     <TextField
                                         size="small"
                                         fullWidth
-                                        label={<label>Opción <span style={{ color: 'red' }}>*</span></label>}
-                                        name="vdesc"
+                                        label={<label>Perfil <span style={{ color: 'red' }}>*</span></label>}
+                                        name="profile"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
-                                        value={values.vdesc}
+                                        value={values.profile}
                                         variant="outlined"
                                         InputLabelProps={{
                                             shrink: true
                                         }}
                                     />
                                 </Grid>
+                                <Grid item lg={12} sm={12} xs={12}>
+                                    <TextField
+                                        size="small"
+                                        fullWidth
+                                        label={<label>Descripción <span style={{ color: 'red' }}>*</span></label>}
+                                        name="description"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.description}
+                                        variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item lg={12} sm={12} xs={12} style={{display: gridvisible}}>
+                                    <CheckboxTree
+                                            nodes={nodes}
+                                            checked={checked}
+                                            showNodeIcon={false}
+                                            expanded={expanded}
+                                            onCheck={checked => setChecked(checked)}
+                                            onExpand={expanded => setExpanded(expanded)}
+                                        />
+                                </Grid>
+
                                 <Grid item lg={12} sm={12} xs={12} >
                                     <TextField
                                         size="small"
@@ -171,10 +234,10 @@ const NewProfile: FC<NewProfileProps> = ({
                                         SelectProps={{ native: true }}
                                         select
                                         label={<label>Estado</label>}
-                                        name="bestado"
+                                        name="estado"
                                         onBlur={handleBlur}
                                         onChange={handleChange}
-                                        value={values.bestado}
+                                        value={values.estado}
                                         variant="outlined"
                                         InputLabelProps={{
                                             shrink: true

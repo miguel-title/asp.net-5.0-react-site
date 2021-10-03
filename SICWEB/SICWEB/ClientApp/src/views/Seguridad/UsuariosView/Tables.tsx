@@ -9,7 +9,6 @@ import {
   Box,
   Button,
   Card,
-  Checkbox,
   Table,
   TableBody,
   TableCell,
@@ -26,8 +25,7 @@ import {
 } from '@material-ui/core';
 import {
   Edit as EditIcon,
-  Trash as DeleteIcon,
-  Search as SearchIcon
+  Trash as DeleteIcon
 } from 'react-feather';
 
 import SearchIcon2 from '@material-ui/icons/Search';
@@ -40,7 +38,6 @@ import { getUser, deleteUser } from 'src/apis/userApi';
 import useSettings from 'src/hooks/useSettings';
 import ConfirmModal from 'src/components/ConfirmModal';
 import { useSnackbar } from 'notistack';
-import { ContactsOutlined, Pages } from '@material-ui/icons';
 
 
 interface TablesProps {
@@ -161,15 +158,6 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
     responsiveFontSizes: settings.responsiveFontSizes,
     theme: settings.theme
   });
-
-  const [name, setName] = useState<any>([]);
-  const [lastname, setLastname] = useState<any>([]);
-  const [mlastname, setMlastname] = useState<any>([]);
-  const [user, setUser] = useState<any>([]);
-  const [password, setPassword] = useState<any>([]);
-  const [networkuser, setNetworkuser] = useState<any>([]);
-  const [profile_id, setProfile_id] = useState<any>([]);
-  const [estado, setEstado] = useState<any>([]);
 
   const [items, setItems] = useState<any>([]);
 
@@ -448,14 +436,6 @@ const Tables: FC<TablesProps> = ({ className, ...rest }) => {
         {/* Dialog renders its body even if not open */}
         {isModalOpen && (
           <NewUser
-            name={name}
-            lastname={lastname}
-            mlastname={mlastname}
-            user={user}
-            password={password}
-            networkuser={networkuser}
-            profile_id={profile_id}
-            estado={estado}
             _getInitialData={_getInitialData}
             editID={editID}
             _initialValue={items}

@@ -20,6 +20,7 @@ namespace SICWEB.DbFactory
 
         public DbSet<T_USUARIO> User { get; set; }
         public DbSet<T_USUARIO_PERFIL> UserProfile { get; set; }
+        public DbSet<T_PERFIL> Profile { get; set; }
 
         public MainMssqlDbContext(DbContextOptions<MainMssqlDbContext> options) : base(options)
         {

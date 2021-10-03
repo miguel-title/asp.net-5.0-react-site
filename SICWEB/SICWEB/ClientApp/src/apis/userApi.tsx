@@ -1,4 +1,5 @@
 import axios from 'src/utils/axios';
+import { saveOPC } from './menuApi';
 
 export const getUser = async (filter) => {
     const response = await axios.post<{}>('/api/user/users', filter);
@@ -18,9 +19,21 @@ export const saveUser = async (saveUser) => {
     else return [];
 }
 
-
 export const getProfiles = async () => {
     const response = await axios.get<{}>('/api/user/getProfiles');
+    if (response.status === 200) return response.data;
+    else return [];
+}
+
+export const saveProfile = async(saveProfile) => {
+    const response = await axios.post<{}>('/api/user/saveProfile', saveProfile);
+    if (response.status === 200) return response.data;
+    else return [];
+}
+
+
+export const getProfile = async (id) => {
+    const response = await axios.post<{}>('/api/user/getProfile', {id:id});
     if (response.status === 200) return response.data;
     else return [];
 }
