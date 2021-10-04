@@ -1,3 +1,4 @@
+import { profile } from 'console';
 import axios from 'src/utils/axios';
 import { saveOPC } from './menuApi';
 
@@ -40,6 +41,20 @@ export const getProfile = async (id) => {
 
 export const getAccessProfile = async(profileid) => {
     const response = await axios.post<{}>('/api/user/getAccessProfile', profileid);
+    if (response.status === 200) return response.data;
+    else return [];
+}
+
+
+export const getCheckedValues = async(profileid) => {
+    const response = await axios.post<{}>('/api/user/getCheckedValues', {id: profileid});
+    if (response.status === 200) return response.data;
+    else return [];
+}
+
+export const getCheckedcrudValues = async(profileid) => {
+    const response = await axios.post<{}>('/api/user/getCheckedcrudValues', {id:profileid});
+    console.log(response,"response")
     if (response.status === 200) return response.data;
     else return [];
 }

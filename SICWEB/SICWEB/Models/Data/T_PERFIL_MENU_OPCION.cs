@@ -5,7 +5,7 @@ namespace SICWEB
 {
     public class T_PERFIL_MENU_OPCION
     {
-        public int Perf_c_yid { get; set; }
+        public byte Perf_c_yid { get; set; }
         public int Menu_opcion_c_iid { get; set; }
         public bool Perf_menu_opcion_c_bestado { get; set; }
     }

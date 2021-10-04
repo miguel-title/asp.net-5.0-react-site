@@ -33,6 +33,7 @@ interface NewProfileProps {
     profileid?: Number,
     profiledata?: any[],
     initialnodes?: any[],
+    checkedValues?: any[],
     event?: Event;
     _getInitialData?: () => void;
     onAddComplete?: () => void;
@@ -52,6 +53,7 @@ const NewProfile: FC<NewProfileProps> = ({
     profileid,
     profiledata,
     initialnodes,
+    checkedValues,
     event,
     _getInitialData,
     onAddComplete,
@@ -126,6 +128,9 @@ const NewProfile: FC<NewProfileProps> = ({
         }
     }, [profileid])
 
+    useEffect(() => {
+        setChecked(checkedValues);
+    }, [checkedValues])
 
     return (
         <>

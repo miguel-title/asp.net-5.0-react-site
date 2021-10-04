@@ -287,14 +287,13 @@ namespace SICWEB.Controllers
                         if (lstDefaultValues.Contains(value.Split("-")[1]))
                             continue;
 
-                        var _item = _context_SS.Profile_menuopcion.Where(u => u.Perf_c_yid.Equals(profile.id)).FirstOrDefault();
-                        if (!(_item == null))
-                        {
+                        var _items = _context_SS.Profile_menuopcion.Where(u => u.Perf_c_yid.Equals((byte)profile.id));
+                        foreach (var _item in _items) { 
                             _context_SS.Profile_menuopcion.Remove(_item);
                         }
 
                         T_PERFIL_MENU_OPCION _menu_opcion = new();
-                        _menu_opcion.Perf_c_yid = profile.id;
+                        _menu_opcion.Perf_c_yid = (byte)profile.id;
                         _menu_opcion.Menu_opcion_c_iid = Int16.Parse(value.Split("-")[1]);
                         _menu_opcion.Perf_menu_opcion_c_bestado = true;
                         _context_SS.Profile_menuopcion.Add(_menu_opcion);
@@ -364,6 +363,60 @@ namespace SICWEB.Controllers
                                 childvalue = D.Menu_opcion_c_iid == null ? 0 : D.Menu_opcion_c_iid,
                                 label = A.Menu_c_vnomb,
                                 childlabel = G.Opc_c_vdesc == null ? "" : G.Opc_c_vdesc
+                            };
+
+                return Ok(query);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Getcheckedvalues([FromBody] IdKey item)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                var query = from B in _context_SS.Set<T_MENU_OPCION>()
+                            join E in _context_SS.Set<T_PERFIL_MENU_OPCION>() on B.Menu_opcion_c_iid equals E.Menu_opcion_c_iid into F
+                            from G in F.DefaultIfEmpty()
+                            where G.Perf_c_yid == item.id
+                            select new
+                            {
+                                menuid = B.Menu_c_iid,
+                                menuopcionid = G.Menu_opcion_c_iid
+                            };
+
+                return Ok(query);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Getcheckedcrudvalues([FromBody] IdKey item)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                var query = from B in _context_SS.Set<T_PERFIL_MENU>()
+                            where B.Perf_c_yid == (byte)item.id
+                            select new
+                            {
+                                menuid = B.Menu_c_iid,
+                                a = B.Perf_menu_c_calta,
+                                b = B.Perf_menu_c_cmod,
+                                c = B.Perf_menu_c_celim,
+                                d = B.Perf_menu_c_cvisual,
+                                e = B.Perf_menu_c_cimpre,
+                                f = B.Perf_menu_c_cproc,
                             };
 
                 return Ok(query);

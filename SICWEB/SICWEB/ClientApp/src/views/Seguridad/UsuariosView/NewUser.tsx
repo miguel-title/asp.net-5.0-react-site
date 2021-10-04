@@ -20,7 +20,7 @@ import AddIcon2 from '@material-ui/icons/Add';
 import NewProfile from './NewProfile';
 import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
-import { saveUser, getProfiles, getProfile, getAccessProfile } from 'src/apis/userApi';
+import { saveUser, getProfiles, getProfile, getAccessProfile, getCheckedValues, getCheckedcrudValues } from 'src/apis/userApi';
 import { useSnackbar } from 'notistack';
 import useSettings from 'src/hooks/useSettings';
 
@@ -52,15 +52,6 @@ const NewUser: FC<NewUserProps> = ({
     onDeleteComplete,
     onEditComplete
 }) => {
-    const initialnodes = [{
-        value: 'mars',
-        label: 'Mars111',
-        children: [
-            { value: 'phobos', label: 'Phobos' },
-            { value: 'deimos', label: 'Deimos' },
-        ],
-    }];
-
     const classes = useStyles();
     const { enqueueSnackbar } = useSnackbar();
     const { saveSettings } = useSettings();
@@ -68,11 +59,12 @@ const NewUser: FC<NewUserProps> = ({
     const [profiles, setProfiles] = useState<any>([]);
     const [userInfo, setuserInfo] = useState<any>({});
     const [profiledata, setProfileData] = useState<any>({});
+    const [checkedValues, setCheckedValues] = useState<any>([]);
 
     const [modalState, setModalState] = useState(0);
     const [profileid, setProfileid] = useState<any>(-1);
 
-    
+
     const [nodes, setNodes] = useState<any>([]);
 
     const handleModalClose3 = (): void => {
@@ -147,7 +139,7 @@ const NewUser: FC<NewUserProps> = ({
         var tmpnodes = [];
         var lstValues = [];
         menudata.map((node) => {
-            if (lstValues.indexOf(node.value) == -1){
+            if (lstValues.indexOf(node.value) == -1) {
                 lstValues.push(node.value);
                 var children = [
                     { value: node.value + "-a", label: 'Nuevo' },
@@ -158,21 +150,21 @@ const NewUser: FC<NewUserProps> = ({
                     { value: node.value + "-f", label: 'Imprimir' },
                 ];
                 menudata.map((childnode) => {
-                    if (childnode.value == node.value && childnode.childvalue != 0){
+                    if (childnode.value == node.value && childnode.childvalue != 0) {
                         children.push({ value: childnode.value + "-" + childnode.childvalue, label: childnode.childlabel });
                     }
                 })
 
-                
+
                 var data = {
                     value: node.value,
                     label: node.label,
                     children: children,
                 };
-    
+
                 tmpnodes.push(data);
             }
-            
+
         })
 
         return tmpnodes;
@@ -186,26 +178,61 @@ const NewUser: FC<NewUserProps> = ({
         })
     }
 
-    const handleChange = (e: any) : void => {
+    const handleChange = (e: any): void => {
         if (e.target.name === "profile_id") {
             setProfileid(e.target.value);
             _getProfile(e.target.value);
         }
 
-        var data = {[e.target.name]: e.target.value}
+        var data = { [e.target.name]: e.target.value }
 
-        setuserInfo({ ...userInfo , ...data})
+        setuserInfo({ ...userInfo, ...data })
 
+    } 
+
+    const _getCheckedValues = (profileid) => {
+        var tmpCheckedValue = [];
+        getCheckedValues(profileid).then((res: any) => {
+            res.map((data: any) => {
+                tmpCheckedValue.push(data.menuid + "-" + data.menuopcionid);
+            })
+        })
+
+        getCheckedcrudValues(profileid).then((res: any) => {
+            res.map((data: any) => {
+                if (data.a == 'A') {
+                    tmpCheckedValue.push(data.menuid + "-a");
+                }
+                if (data.b == 'A') {
+                    tmpCheckedValue.push(data.menuid + "-b");
+                }
+                if (data.c == 'A') {
+                    tmpCheckedValue.push(data.menuid + "-c");
+                }
+                if (data.d == 'A') {
+                    tmpCheckedValue.push(data.menuid + "-d");
+                }
+                if (data.e == 'A') {
+                    tmpCheckedValue.push(data.menuid + "-e");
+                }
+                if (data.f == 'A') {
+                    tmpCheckedValue.push(data.menuid + "-f");
+                }
+            })
+        })
+
+        setCheckedValues(tmpCheckedValue);
     }
 
-    
-    useEffect(() => {        
+
+    useEffect(() => {
         _getProfile(profileid);
         _getAccessProfile(profileid);
+        _getCheckedValues(profileid);
     }, [profileid])
 
-    
-    useEffect(() => {        
+
+    useEffect(() => {
         _getProfile(profileid);
         _getAccessProfile(profileid);
     }, [isModalOpen3])
@@ -217,20 +244,21 @@ const NewUser: FC<NewUserProps> = ({
         _getProfile(_initialValue[editID]?.profile_id);
         _getAccessProfile(_initialValue[editID]?.profile_id);
         const iniVal = getInitialValues();
-        if(iniVal){
+        if (iniVal) {
             setuserInfo({
                 ...iniVal
             })
         }
+
+        _getCheckedValues(_initialValue[editID]?.profile_id);
     }, [])
 
-    
+
     const _getProfile = (profileid) => {
         getProfile(profileid).then(res => {
             setProfileData(res);
         })
     }
-
     return (
         <>
             <Formik
@@ -239,7 +267,7 @@ const NewUser: FC<NewUserProps> = ({
                     setSubmitting
                 }) => {
                     saveSettings({ saving: true });
-                    values = { ...values , ...userInfo}
+                    values = { ...values, ...userInfo }
                     window.setTimeout(() => {
                         values["estado"] = Number(values?.estado) === 1 ? true : false;
                         values['profile_id'] = Number(values?.profile_id);
@@ -498,8 +526,9 @@ const NewUser: FC<NewUserProps> = ({
                 {isModalOpen3 && (
                     <NewProfile
                         profileid={profileid}
-                        profiledata = {profiledata}
-                        initialnodes = {nodes}
+                        profiledata={profiledata}
+                        initialnodes={nodes}
+                        checkedValues={checkedValues}
                         onAddComplete={handleModalClose3}
                         onCancel={handleModalClose3}
                         onDeleteComplete={handleModalClose3}
