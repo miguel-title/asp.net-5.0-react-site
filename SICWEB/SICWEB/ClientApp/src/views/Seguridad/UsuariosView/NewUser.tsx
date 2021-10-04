@@ -20,7 +20,7 @@ import AddIcon2 from '@material-ui/icons/Add';
 import NewProfile from './NewProfile';
 import type { Theme } from 'src/theme';
 import type { Event } from 'src/types/calendar';
-import { saveUser, getProfiles, getProfile } from 'src/apis/userApi';
+import { saveUser, getProfiles, getProfile, getAccessProfile } from 'src/apis/userApi';
 import { useSnackbar } from 'notistack';
 import useSettings from 'src/hooks/useSettings';
 
@@ -52,6 +52,15 @@ const NewUser: FC<NewUserProps> = ({
     onDeleteComplete,
     onEditComplete
 }) => {
+    const initialnodes = [{
+        value: 'mars',
+        label: 'Mars111',
+        children: [
+            { value: 'phobos', label: 'Phobos' },
+            { value: 'deimos', label: 'Deimos' },
+        ],
+    }];
+
     const classes = useStyles();
     const { enqueueSnackbar } = useSnackbar();
     const { saveSettings } = useSettings();
@@ -62,6 +71,9 @@ const NewUser: FC<NewUserProps> = ({
 
     const [modalState, setModalState] = useState(0);
     const [profileid, setProfileid] = useState<any>(-1);
+
+    
+    const [nodes, setNodes] = useState<any>([]);
 
     const handleModalClose3 = (): void => {
         setIsModalOpen3(false);
@@ -130,32 +142,80 @@ const NewUser: FC<NewUserProps> = ({
             setProfiles(res);
         })
     }
+
+    const maketreenodes = (menudata) => {
+        var tmpnodes = [];
+        var lstValues = [];
+        menudata.map((node) => {
+            if (lstValues.indexOf(node.value) == -1){
+                lstValues.push(node.value);
+                var children = [
+                    { value: node.value + "-a", label: 'Nuevo' },
+                    { value: node.value + "-b", label: 'Editar' },
+                    { value: node.value + "-c", label: 'Ver' },
+                    { value: node.value + "-d", label: 'Eliminar' },
+                    { value: node.value + "-e", label: 'Procesar' },
+                    { value: node.value + "-f", label: 'Imprimir' },
+                ];
+                menudata.map((childnode) => {
+                    if (childnode.value == node.value && childnode.childvalue != 0){
+                        children.push({ value: childnode.value + "-" + childnode.childvalue, label: childnode.childlabel });
+                    }
+                })
+
+                
+                var data = {
+                    value: node.value,
+                    label: node.label,
+                    children: children,
+                };
+    
+                tmpnodes.push(data);
+            }
+            
+        })
+
+        return tmpnodes;
+    }
+
+    const _getAccessProfile = (profileid) => {
+        getAccessProfile(profileid).then(res => {
+            var output = maketreenodes(res);
+            setNodes(output);
+
+        })
+    }
+
     const handleChange = (e: any) : void => {
         if (e.target.name === "profile_id") {
             setProfileid(e.target.value);
             _getProfile(e.target.value);
         }
-        setuserInfo({
-            [e.target.name]: e.target.value
-        })
+
+        var data = {[e.target.name]: e.target.value}
+
+        setuserInfo({ ...userInfo , ...data})
 
     }
 
     
     useEffect(() => {        
         _getProfile(profileid);
+        _getAccessProfile(profileid);
     }, [profileid])
 
     
     useEffect(() => {        
         _getProfile(profileid);
+        _getAccessProfile(profileid);
     }, [isModalOpen3])
 
 
     useEffect(() => {
         _getProfiles();
-        setProfileid(_initialValue[editID].profile_id);
-        _getProfile(_initialValue[editID].profile_id);
+        setProfileid(_initialValue[editID]?.profile_id);
+        _getProfile(_initialValue[editID]?.profile_id);
+        _getAccessProfile(_initialValue[editID]?.profile_id);
         const iniVal = getInitialValues();
         if(iniVal){
             setuserInfo({
@@ -179,7 +239,6 @@ const NewUser: FC<NewUserProps> = ({
                     setSubmitting
                 }) => {
                     saveSettings({ saving: true });
-                    console.log(userInfo, values)
                     values = { ...values , ...userInfo}
                     window.setTimeout(() => {
                         values["estado"] = Number(values?.estado) === 1 ? true : false;
@@ -440,6 +499,7 @@ const NewUser: FC<NewUserProps> = ({
                     <NewProfile
                         profileid={profileid}
                         profiledata = {profiledata}
+                        initialnodes = {nodes}
                         onAddComplete={handleModalClose3}
                         onCancel={handleModalClose3}
                         onDeleteComplete={handleModalClose3}

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SICWEB.Models
 {
@@ -9,5 +10,6 @@ namespace SICWEB.Models
         public string description { get; set; }
         public int estado { get; set; }
         public int method { get; set; }
+        public List<string> checkvalues { get; set; }
     }
 }

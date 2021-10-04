@@ -30,8 +30,9 @@ import 'react-checkbox-tree/lib/react-checkbox-tree.css';
 
 
 interface NewProfileProps {
-    profileid?:Number,
-    profiledata?:any[],
+    profileid?: Number,
+    profiledata?: any[],
+    initialnodes?: any[],
     event?: Event;
     _getInitialData?: () => void;
     onAddComplete?: () => void;
@@ -50,6 +51,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 const NewProfile: FC<NewProfileProps> = ({
     profileid,
     profiledata,
+    initialnodes,
     event,
     _getInitialData,
     onAddComplete,
@@ -57,25 +59,16 @@ const NewProfile: FC<NewProfileProps> = ({
     onDeleteComplete,
     onEditComplete
 }) => {
-    const initialnodes = [{
-        value: 'mars',
-        label: 'Mars',
-        children: [
-            { value: 'phobos', label: 'Phobos' },
-            { value: 'deimos', label: 'Deimos' },
-        ],
-    }];
 
     const classes = useStyles();
     const { enqueueSnackbar } = useSnackbar();
     const { saveSettings } = useSettings();
-    const [isModalOpen3, setIsModalOpen3] = useState(false);   
+    const [isModalOpen3, setIsModalOpen3] = useState(false);
     const [gridvisible, setGridvisible] = useState<string>('none');
     const [checked, setChecked] = useState<any[]>([]);
     const [expanded, setExpanded] = useState<any[]>([]);
-    const [nodes, setNodes] = useState<any[]>(initialnodes);
 
-    
+
     const [profile, setProfile] = useState<any>([]);
 
     const handleModalClose3 = (): void => {
@@ -86,31 +79,31 @@ const NewProfile: FC<NewProfileProps> = ({
         setIsModalOpen3(true);
     };
 
-    
+
     const getInitialValues = () => {
-        if (profileid > -1){
+        if (profileid > -1) {
             return _.merge({}, {
-                id:0,
+                id: 0,
                 profile: "",
-                description:"",
+                description: "",
                 estado: 1,
                 method: 1,
                 submit: null
             }, {
-                id:profileid,
+                id: profileid,
                 profile: profiledata[0]?.profile,
-                description:profiledata[0]?.description,
+                description: profiledata[0]?.description,
                 estado: profiledata[0]?.estado,
                 method: 1,
                 submit: null
             });
-        }else{
+        } else {
             return {
-                id:0,
+                id: 0,
                 profile: "",
-                description:"",
+                description: "",
                 estado: 1,
-                method:0,
+                method: 0,
                 submit: null
             };
         }
@@ -126,9 +119,9 @@ const NewProfile: FC<NewProfileProps> = ({
     }]
 
     useEffect(() => {
-        if(profileid > -1){
+        if (profileid > -1) {
             setGridvisible('block');
-        }else{
+        } else {
             setGridvisible('none');
         }
     }, [profileid])
@@ -146,6 +139,7 @@ const NewProfile: FC<NewProfileProps> = ({
                 }) => {
                     saveSettings({ saving: true });
                     window.setTimeout(() => {
+                        values["checkvalues"] = checked
                         saveProfile(values).then(res => {
                             saveSettings({ saving: false });
                             enqueueSnackbar('Tus datos se han guardado exitosamente.', {
@@ -216,15 +210,15 @@ const NewProfile: FC<NewProfileProps> = ({
                                         }}
                                     />
                                 </Grid>
-                                <Grid item lg={12} sm={12} xs={12} style={{display: gridvisible}}>
+                                <Grid item lg={12} sm={12} xs={12} style={{ display: gridvisible }}>
                                     <CheckboxTree
-                                            nodes={nodes}
-                                            checked={checked}
-                                            showNodeIcon={false}
-                                            expanded={expanded}
-                                            onCheck={checked => setChecked(checked)}
-                                            onExpand={expanded => setExpanded(expanded)}
-                                        />
+                                        nodes={initialnodes}
+                                        checked={checked}
+                                        showNodeIcon={false}
+                                        expanded={expanded}
+                                        onCheck={checked => setChecked(checked)}
+                                        onExpand={expanded => setExpanded(expanded)}
+                                    />
                                 </Grid>
 
                                 <Grid item lg={12} sm={12} xs={12} >

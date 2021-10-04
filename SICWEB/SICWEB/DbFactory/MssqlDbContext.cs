@@ -22,6 +22,10 @@ namespace SICWEB.DbFactory
         public DbSet<T_USUARIO_PERFIL> UserProfile { get; set; }
         public DbSet<T_PERFIL> Profile { get; set; }
 
+        public DbSet<T_PERFIL_MENU> Profile_menu { get; set; }
+
+        public DbSet<T_PERFIL_MENU_OPCION> Profile_menuopcion { get; set; }
+
         public MainMssqlDbContext(DbContextOptions<MainMssqlDbContext> options) : base(options)
         {
 
@@ -50,6 +54,10 @@ namespace SICWEB.DbFactory
             builder.Entity<T_PERFIL_MENU>().ToTable(Prefix + "T_PERFIL_MENU", Schema);
             builder.Entity<T_PERFIL_MENU>().HasKey(p => new { p.Perf_c_yid, p.Menu_c_iid });
             builder.Entity<T_PERFIL_MENU>().Property(p => p.Perf_c_yid).ValueGeneratedOnAdd();
+
+            builder.Entity<T_PERFIL_MENU_OPCION>().ToTable(Prefix + "T_PERFIL_MENU_OPCION", Schema);
+            builder.Entity<T_PERFIL_MENU_OPCION>().HasKey(p => new { p.Perf_c_yid, p.Menu_opcion_c_iid});
+            builder.Entity<T_PERFIL_MENU_OPCION>().Property(p => p.Perf_c_yid).ValueGeneratedOnAdd();
 
             builder.Entity<T_PERFIL_OPCION>().ToTable(Prefix + "T_PERFIL_OPCION", Schema);
             builder.Entity<T_PERFIL_OPCION>().HasKey(p => new { p.Opc_c_iid, p.Perf_c_yid });

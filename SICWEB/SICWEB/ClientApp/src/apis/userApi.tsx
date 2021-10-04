@@ -37,3 +37,9 @@ export const getProfile = async (id) => {
     if (response.status === 200) return response.data;
     else return [];
 }
+
+export const getAccessProfile = async(profileid) => {
+    const response = await axios.post<{}>('/api/user/getAccessProfile', profileid);
+    if (response.status === 200) return response.data;
+    else return [];
+}

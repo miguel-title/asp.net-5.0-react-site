@@ -237,8 +237,73 @@ namespace SICWEB.Controllers
                         _profile.Perf_c_cestado = '0';
                     _context_SS.Profile.Update(_profile);
                     _context_SS.SaveChanges();
-                }
 
+                    //Profile update
+                    List<string> lstParentIDs = new List<string>();
+                    foreach (string value in profile.checkvalues)
+                    {
+                        if (!lstParentIDs.Contains(value.Split("-")[0]))
+                        {
+                            lstParentIDs.Add(value.Split("-")[0]);
+                        }
+                    }
+                    //Seguridad.SIC_T_PERFIL_MENU
+                    foreach (string parentID in lstParentIDs)
+                    {
+                        var _oldProfilemenu = _context_SS.Profile_menu.Where(u => u.Menu_c_iid.Equals(Int16.Parse(parentID))).Where(u => u.Perf_c_yid.Equals((byte)profile.id)).FirstOrDefault();
+                        if (!(_oldProfilemenu == null))
+                        {
+                            _oldProfilemenu.Perf_menu_c_calta = profile.checkvalues.Contains(parentID + "-" + "a") ? 'A' : 'B';
+                            _oldProfilemenu.Perf_menu_c_cmod = profile.checkvalues.Contains(parentID + "-" + "b") ? 'A' : 'B'; ;
+                            _oldProfilemenu.Perf_menu_c_celim = profile.checkvalues.Contains(parentID + "-" + "c") ? 'A' : 'B'; ;
+                            _oldProfilemenu.Perf_menu_c_cvisual = profile.checkvalues.Contains(parentID + "-" + "d") ? 'A' : 'B'; ;
+                            _oldProfilemenu.Perf_menu_c_cimpre = profile.checkvalues.Contains(parentID + "-" + "e") ? 'A' : 'B'; ;
+                            _oldProfilemenu.Perf_menu_c_cproc = profile.checkvalues.Contains(parentID + "-" + "f") ? 'A' : 'B'; ;
+                            _context_SS.Profile_menu.Update(_oldProfilemenu);
+                        }
+                        else
+                        {
+                            T_PERFIL_MENU _menu = new();
+                            _menu.Menu_c_iid = Int16.Parse(parentID);
+                            _menu.Perf_c_yid = Convert.ToByte(profile.id);
+                            _menu.Perf_menu_c_calta = profile.checkvalues.Contains(parentID + "-" + "a") ? 'A' : 'B';
+                            _menu.Perf_menu_c_cmod = profile.checkvalues.Contains(parentID + "-" + "b") ? 'A' : 'B'; ;
+                            _menu.Perf_menu_c_celim = profile.checkvalues.Contains(parentID + "-" + "c") ? 'A' : 'B'; ;
+                            _menu.Perf_menu_c_cvisual = profile.checkvalues.Contains(parentID + "-" + "d") ? 'A' : 'B'; ;
+                            _menu.Perf_menu_c_cimpre = profile.checkvalues.Contains(parentID + "-" + "e") ? 'A' : 'B'; ;
+                            _menu.Perf_menu_c_cproc = profile.checkvalues.Contains(parentID + "-" + "f") ? 'A' : 'B'; ;
+
+                            _context_SS.Profile_menu.Add(_menu);
+                        }
+
+
+                    }
+                    _context_SS.SaveChanges();
+
+                    //Seguridad.SIC_T_PERFIL_MENU_OPCION
+                    List<string> lstDefaultValues = new List<String>() { "a", "b", "c", "d", "e", "f"};
+                    foreach (string value in profile.checkvalues)
+                    {
+                        if (lstDefaultValues.Contains(value.Split("-")[1]))
+                            continue;
+
+                        var _item = _context_SS.Profile_menuopcion.Where(u => u.Perf_c_yid.Equals(profile.id)).FirstOrDefault();
+                        if (!(_item == null))
+                        {
+                            _context_SS.Profile_menuopcion.Remove(_item);
+                        }
+
+                        T_PERFIL_MENU_OPCION _menu_opcion = new();
+                        _menu_opcion.Perf_c_yid = profile.id;
+                        _menu_opcion.Menu_opcion_c_iid = Int16.Parse(value.Split("-")[1]);
+                        _menu_opcion.Perf_menu_opcion_c_bestado = true;
+                        _context_SS.Profile_menuopcion.Add(_menu_opcion);
+                    }
+
+                    _context_SS.SaveChanges();
+
+                    return Ok();
+                }
                 return Ok();
             }
             else
@@ -273,6 +338,35 @@ namespace SICWEB.Controllers
                 {
                     return NotFound();
                 }
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "cliente")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Getaccessprofile(int profileid)
+        {
+            if (_engine.Equals("MSSQL"))
+            {
+                var query = from A in _context_SS.Set<T_MENU>()
+                            join B in _context_SS.Set<T_MENU_OPCION>() on A.Menu_c_iid equals B.Menu_c_iid into C
+                            from D in C.DefaultIfEmpty()
+                            join E in _context_SS.Set<T_OPCION>() on D.Opc_c_iid equals E.Opc_c_iid into F
+                            from G in F.DefaultIfEmpty()
+                            select new
+                            {
+                                value = A.Menu_c_iid,
+                                childvalue = D.Menu_opcion_c_iid == null ? 0 : D.Menu_opcion_c_iid,
+                                label = A.Menu_c_vnomb,
+                                childlabel = G.Opc_c_vdesc == null ? "" : G.Opc_c_vdesc
+                            };
+
+                return Ok(query);
             }
             else
             {
